@@ -66,7 +66,7 @@ def run(dataset, data_dir, result_dir, config_id, num_gpus, total_kimg, gamma, m
 
     assert config_id in _valid_configs
     desc += '-' + config_id
-    
+
     print("Description : ",desc)
     print('--'*10)
 
@@ -130,7 +130,6 @@ def run(dataset, data_dir, result_dir, config_id, num_gpus, total_kimg, gamma, m
     kwargs.submit_config.run_dir_root = result_dir
     kwargs.submit_config.run_desc = desc
     dnnlib.submit_run(**kwargs)
-
 #----------------------------------------------------------------------------
 
 def _str_to_bool(v):
@@ -166,6 +165,7 @@ valid metrics:
 '''
 
 def main():
+    print("#"*30)
     parser = argparse.ArgumentParser(
         description='Train StyleGAN2.',
         epilog=_examples,
@@ -207,7 +207,7 @@ def main():
             print('metrics : ',metric)
 
     run(**vars(args))
-
+    print("#"*30)
 #----------------------------------------------------------------------------
 
 if __name__ == "__main__":

@@ -114,8 +114,10 @@ class SubmitConfig(util.EasyDict):
 
 
 def get_path_from_template(path_template: str, path_type: PathType = PathType.AUTO) -> str:
-    """Replace tags in the given path template and return either Windows or Linux formatted path."""
+    print("""Replace tags in the given path template and return either Windows or Linux formatted path.""")
+    print("""
     # automatically select path type depending on running OS
+    """)
     if path_type == PathType.AUTO:
         if platform.system() == "Windows":
             path_type = PathType.WINDOWS
@@ -125,8 +127,10 @@ def get_path_from_template(path_template: str, path_type: PathType = PathType.AU
             raise RuntimeError("Unknown platform")
 
     path_template = path_template.replace("<USERNAME>", get_user_name())
-
-    # return correctly formatted path
+    print("""
+     # return correctly formatted path
+    """)
+   
     if path_type == PathType.WINDOWS:
         return str(pathlib.PureWindowsPath(path_template))
     elif path_type == PathType.LINUX:
@@ -136,15 +140,16 @@ def get_path_from_template(path_template: str, path_type: PathType = PathType.AU
 
 
 def get_template_from_path(path: str) -> str:
-    """Convert a normal path back to its template representation."""
+    print("""Convert a normal path back to its template representation.""")
     path = path.replace("\\", "/")
     return path
 
 
 def convert_path(path: str, path_type: PathType = PathType.AUTO) -> str:
-    """Convert a normal path to template and the convert it back to a normal path with given path type."""
+    print("""Convert a normal path to template and the convert it back to a normal path with given path type.""")
     path_template = get_template_from_path(path)
     path = get_path_from_template(path_template, path_type)
+    print("Path : ",path)
     return path
 
 
@@ -225,10 +230,12 @@ def _get_next_run_id_local(run_dir_root: str) -> int:
 
 
 def _populate_run_dir(submit_config: SubmitConfig, run_dir: str) -> None:
-    """Copy all necessary files into the run dir. Assumes that the dir exists, is local, and is writable."""
+    print("""Copy all necessary files into the run dir. Assumes that the dir exists, is local, and is writable.""")
     pickle.dump(submit_config, open(os.path.join(run_dir, "submit_config.pkl"), "wb"))
+    print(os.path.join(run_dir, "submit_config.pkl"))
     with open(os.path.join(run_dir, "submit_config.txt"), "w") as f:
         pprint.pprint(submit_config, stream=f, indent=4, width=200, compact=False)
+        print(os.path.join(run_dir, "submit_config.txt"))
 
     if (submit_config.submit_target == SubmitTarget.LOCAL) and submit_config.local.do_not_copy_source_files:
         return
@@ -254,14 +261,19 @@ def _populate_run_dir(submit_config: SubmitConfig, run_dir: str) -> None:
 
 
 def run_wrapper(submit_config: SubmitConfig) -> None:
-    """Wrap the actual run function call for handling logging, exceptions, typing, etc."""
+    print("""Wrap the actual run function call for handling logging, exceptions, typing, etc.""")
     is_local = submit_config.submit_target == SubmitTarget.LOCAL
 
-    # when running locally, redirect stderr to stdout, log stdout to a file, and force flushing
     if is_local:
         logger = util.Logger(file_name=os.path.join(submit_config.run_dir, "log.txt"), file_mode="w", should_flush=True)
-    else:  # when running in a cluster, redirect stderr to stdout, and just force flushing (log writing is handled by run.sh)
+        print("""
+        # when running locally, redirect stderr to stdout, log stdout to a file, and force flushing
+        """)
+    else: 
         logger = util.Logger(file_name=None, should_flush=True)
+        print("""
+        # when running in a cluster, redirect stderr to stdout, and just force flushing (log writing is handled by run.sh)
+        """)
 
     import dnnlib
     dnnlib.submit_config = submit_config
@@ -347,7 +359,7 @@ def submit_run(submit_config: SubmitConfig, run_func_name: str, **run_func_kwarg
     
     print("host_run_dir : ",host_run_dir)
     print("submit_config.task_name : ",submit_config.task_name)
-    
+
     if not re.match(docker_valid_name_regex, submit_config.task_name):
         raise RuntimeError("Invalid task name.  Probable reason: unacceptable characters in your submit_config.run_desc.  Task name must be accepted by the following regex: " + docker_valid_name_regex + ", got " + submit_config.task_name)
     
