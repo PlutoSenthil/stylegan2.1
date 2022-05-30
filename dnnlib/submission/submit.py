@@ -190,7 +190,7 @@ def make_run_dir_path(*paths):
 
 
 def _create_run_dir_local(submit_config: SubmitConfig) -> str:
-    """Create a new run dir with increasing ID number at the start."""
+    print("""Create a new run dir with increasing ID number at the start.""")
     run_dir_root = get_path_from_template(submit_config.run_dir_root, PathType.AUTO)
 
     if not os.path.exists(run_dir_root):
@@ -318,8 +318,8 @@ def submit_run(submit_config: SubmitConfig, run_func_name: str, **run_func_kwarg
     if submit_target == SubmitTarget.LOCAL:
         farm = internal.local.Target()
     assert farm is not None # unknown target
-
-    # Disallow submitting jobs with zero num_gpus.
+    print('Farm : ',farm)
+    print("Disallow submitting jobs with zero num_gpus.")
     if (submit_config.num_gpus is None) or (submit_config.num_gpus == 0):
         raise RuntimeError("submit_config.num_gpus must be set to a non-zero value")
 
@@ -328,18 +328,32 @@ def submit_run(submit_config: SubmitConfig, run_func_name: str, **run_func_kwarg
 
     submit_config.run_func_name = run_func_name
     submit_config.run_func_kwargs = run_func_kwargs
+    
+    print("submit_config.num_gpus : ",submit_config.num_gpus)
+    print("submit_config.user_name : ",submit_config.user_name)
+    print("submit_target : ",submit_target)
+    print("submit_config.run_func_name : ",submit_config.run_func_name)
+    print("submit_config.run_func_kwargs : ",submit_config.run_func_kwargs)
 
+    print("""
     #--------------------------------------------------------------------
     # Prepare submission by populating the run dir
     #--------------------------------------------------------------------
+    """)
     host_run_dir = _create_run_dir_local(submit_config)
 
     submit_config.task_name = "{0}-{1:05d}-{2}".format(submit_config.user_name, submit_config.run_id, submit_config.run_desc)
     docker_valid_name_regex = "^[a-zA-Z0-9][a-zA-Z0-9_.-]+$"
+    
+    print("host_run_dir : ",host_run_dir)
+    print("submit_config.task_name : ",submit_config.task_name)
+    
     if not re.match(docker_valid_name_regex, submit_config.task_name):
         raise RuntimeError("Invalid task name.  Probable reason: unacceptable characters in your submit_config.run_desc.  Task name must be accepted by the following regex: " + docker_valid_name_regex + ", got " + submit_config.task_name)
-
+    
+    print("""
     # Farm specific preparations for a submit
+    """)
     farm.finalize_submit_config(submit_config, host_run_dir)
     _populate_run_dir(submit_config, host_run_dir)
     return farm.submit(submit_config, host_run_dir)

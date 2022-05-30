@@ -50,7 +50,7 @@ def training_schedule(
     lod_initial_resolution  = None,     # Image resolution used at the beginning.
     lod_training_kimg       = 600,      # Thousands of real images to show before doubling the resolution.
     lod_transition_kimg     = 600,      # Thousands of real images to show when fading in new layers.
-    minibatch_size_base     = 32,       # Global minibatch size.
+    minibatch_size_base     = 16,       # Global minibatch size.
     minibatch_size_dict     = {},       # Resolution-specific overrides.
     minibatch_gpu_base      = 4,        # Number of samples processed at a time by one GPU.
     minibatch_gpu_dict      = {},       # Resolution-specific overrides.
@@ -59,7 +59,7 @@ def training_schedule(
     D_lrate_base            = 0.002,    # Learning rate for the discriminator.
     D_lrate_dict            = {},       # Resolution-specific overrides.
     lrate_rampup_kimg       = 0,        # Duration of learning rate ramp-up.
-    tick_kimg_base          = 4,        # Default interval of progress snapshots.
+    tick_kimg_base          = 160,        # Default interval of progress snapshots.
     tick_kimg_dict          = {8:28, 16:24, 32:20, 64:16, 128:12, 256:8, 512:6, 1024:4}): # Resolution-specific overrides.
 
     # Initialize result dict.
@@ -124,12 +124,12 @@ def training_loop(
     total_kimg              = 25000,    # Total length of the training, measured in thousands of real images.
     mirror_augment          = False,    # Enable mirror augment?
     drange_net              = [-1,1],   # Dynamic range used when feeding image data to the networks.
-    image_snapshot_ticks    = 50,       # How often to save image snapshots? None = only save 'reals.png' and 'fakes-init.png'.
-    network_snapshot_ticks  = 50,       # How often to save network snapshots? None = only save 'networks-final.pkl'.
+    image_snapshot_ticks    = 1,       # How often to save image snapshots? None = only save 'reals.png' and 'fakes-init.png'.
+    network_snapshot_ticks  = 1,       # How often to save network snapshots? None = only save 'networks-final.pkl'.
     save_tf_graph           = False,    # Include full TensorFlow computation graph in the tfevents file?
     save_weight_histograms  = False,    # Include weight histograms in the tfevents file?
-    resume_pkl              = None,     # Network pickle to resume training from, None = train from scratch.
-    resume_kimg             = 0.0,      # Assumed training progress at the beginning. Affects reporting and training schedule.
+    resume_pkl              = 'stylegan2-ffhq-config-f.pkl',     # Network pickle to resume training from, None = train from scratch.
+    resume_kimg             = 15000,      # Assumed training progress at the beginning. Affects reporting and training schedule.
     resume_time             = 0.0,      # Assumed wallclock time at the beginning. Affects reporting.
     resume_with_new_nets    = False):   # Construct new networks according to G_args and D_args before resuming training?
 
@@ -145,7 +145,7 @@ def training_loop(
     # Construct or load networks.
     with tf.device('/gpu:0'):
         if resume_pkl is None or resume_with_new_nets:
-            print('Constructing networks...')
+            print('Constructing new networks "%s"...' % resume_pkl)
             G = tflib.Network('G', num_channels=training_set.shape[0], resolution=training_set.shape[1], label_size=training_set.label_size, **G_args)
             D = tflib.Network('D', num_channels=training_set.shape[0], resolution=training_set.shape[1], label_size=training_set.label_size, **D_args)
             Gs = G.clone('Gs')
