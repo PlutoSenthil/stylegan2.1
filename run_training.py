@@ -66,13 +66,18 @@ def run(dataset, data_dir, result_dir, config_id, num_gpus, total_kimg, gamma, m
 
     assert config_id in _valid_configs
     desc += '-' + config_id
+    
+    print("Description : ",desc)
+    print('--'*10)
 
     # Configs A-E: Shrink networks to match original StyleGAN.
     if config_id != 'config-f':
+        print("Configs A-E: Shrink networks to match original StyleGAN.")
         G.fmap_base = D.fmap_base = 8 << 10
 
     # Config E: Set gamma to 100 and override G & D architecture.
     if config_id.startswith('config-e'):
+        print("Config E: Set gamma to 100 and override G & D architecture.")
         D_loss.gamma = 100
         if 'Gorig'   in config_id: G.architecture = 'orig'
         if 'Gskip'   in config_id: G.architecture = 'skip' # (default)
@@ -83,6 +88,7 @@ def run(dataset, data_dir, result_dir, config_id, num_gpus, total_kimg, gamma, m
 
     # Configs A-D: Enable progressive growing and switch to networks that support it.
     if config_id in ['config-a', 'config-b', 'config-c', 'config-d']:
+        print("Configs A-D: Enable progressive growing and switch to networks that support it.")
         sched.lod_initial_resolution = 8
         sched.G_lrate_base = sched.D_lrate_base = 0.001
         sched.G_lrate_dict = sched.D_lrate_dict = {128: 0.0015, 256: 0.002, 512: 0.003, 1024: 0.003}
@@ -95,19 +101,25 @@ def run(dataset, data_dir, result_dir, config_id, num_gpus, total_kimg, gamma, m
 
     # Configs A-C: Disable path length regularization.
     if config_id in ['config-a', 'config-b', 'config-c']:
+        print("Configs A-C: Disable path length regularization.")
         G_loss = EasyDict(func_name='training.loss.G_logistic_ns')
 
     # Configs A-B: Disable lazy regularization.
+    print("Configs A-B: Disable lazy regularization.")
     if config_id in ['config-a', 'config-b']:
         train.lazy_regularization = False
 
     # Config A: Switch to original StyleGAN networks.
     if config_id == 'config-a':
+        print("Config A: Switch to original StyleGAN networks.")
         G = EasyDict(func_name='training.networks_stylegan.G_style')
         D = EasyDict(func_name='training.networks_stylegan.D_basic')
 
     if gamma is not None:
         D_loss.gamma = gamma
+        print("gamma is not None")
+    else:
+        print('gamma is None')
 
     sc.submit_target = dnnlib.SubmitTarget.LOCAL
     sc.local.do_not_copy_source_files = True
@@ -172,17 +184,27 @@ def main():
     args = parser.parse_args()
 
     if not os.path.exists(args.data_dir):
-        print ('Error: dataset root directory does not exist.')
+        print ('Error: dataset root directory does not exist.',args.data_dir)
         sys.exit(1)
+    else:
+        print ('dataset root directory exist. > ',args.data_dir)
 
     if args.config_id not in _valid_configs:
         print ('Error: --config value must be one of: ', ', '.join(_valid_configs))
         sys.exit(1)
+    else:
+        print ("--config value default='config-f' > ",args.config_id)
+
+    print('--'*10)
+    print("Metrics : ",metric_defaults)
+    print('--'*10)
 
     for metric in args.metrics:
         if metric not in metric_defaults:
             print ('Error: unknown metric \'%s\'' % metric)
             sys.exit(1)
+        else:
+            print('metrics : ',metric)
 
     run(**vars(args))
 

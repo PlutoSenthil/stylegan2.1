@@ -308,7 +308,9 @@ def run_wrapper(submit_config: SubmitConfig) -> None:
 
 
 def submit_run(submit_config: SubmitConfig, run_func_name: str, **run_func_kwargs) -> None:
-    """Create a run dir, gather files related to the run, copy files to the run dir, and launch the run in appropriate place."""
+    print('--'*10)
+    print("""Create a run dir, gather files related to the run, 
+    copy files to the run dir, and launch the run in appropriate place.""")
     submit_config = copy.deepcopy(submit_config)
 
     submit_target = submit_config.submit_target
